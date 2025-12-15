@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>حساب نسبة النوم - مشروع إحصاء</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            text-align: center;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            font-size: 18px;
+        }
+
+        h2 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        input[type="text"], input[type="number"], select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 18px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 20px;
+            margin-bottom: 25px;
+            max-width: 600px;
+            width: 90%;
+            margin-left:auto;
+            margin-right:auto;
+        }
+
+        .bar-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .bar {
+            height: 35px;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.5s, background-color 0.5s;
+        }
+
+        .bold { font-weight: bold; }
+        .section-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        #solution p { margin: 10px 0; }
+        .encourage { margin-bottom: 25px; }
+        .problem-desc { margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+
+    <h2>حساب نسبة ساعات النوم</h2>
+
+    <div class="card">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <label style="min-width:80px;">اسمك:</label>
+            <input type="text" id="name" style="flex:1;">
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <label style="min-width:80px;">عمرك:</label>
+            <input type="number" id="age" min="0" max="120" style="flex:1;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <label style="min-width:120px;">عدد ساعات نومك يومياً:</label>
+            <input type="number" id="sleep" min="0" max="24" style="flex:1;">
+        </div>
+
+        <button onclick="calculate()">احسب النسبة</button>
+
+        <h3 id="result"></h3>
+
+        <div class="bar-container">
+            <div class="bar" id="progressBar"></div>
+        </div>
+</div>
+
+
+    <div class="card" id="options" style="display:none;">
+        <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+            <label style="margin:0;">اختر نوع مشكلتك:</label>
+            <select id="problemSelect" onchange="showSolution()" style="width:auto;">
+                <option value="">-- اختر مشكلة --</option>
+                <option value="استخدام الهاتف / الكمبيوتر قبل النوم">استخدام الهاتف / الكمبيوتر قبل النوم</option>
+                <option value="التفكير المفرط قبل النوم">التفكير المفرط قبل النوم</option>
+                <option value="السهر لإنهاء الواجبات المدرسية أو لقاء الأصدقاء">السهر لإنهاء الواجبات المدرسية أو لقاء الأصدقاء</option>
+                <option value="شرب الكافيين أو مشروبات الطاقة مساءً">شرب الكافيين أو مشروبات الطاقة مساءً</option>
+                <option value="ضوضاء / بيئة غير مناسبة">ضوضاء / بيئة غير مناسبة</option>
+                <option value="قيلولة طويلة">قيلولة طويلة</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card" id="solution" style="display:none;"></div>
+
+    <script>
+        const problemSolutions = {
+            "استخدام الهاتف / الكمبيوتر قبل النوم": [
+                "ضبط وقت استخدام الهاتف (استخدم برامج مثل stayfree / yourhour)",
+                "استخدام الوضع الليلي (لتقليل الضوء الأزرق)",
+                "تقليل الوقت أمام الشاشات ساعة قبل النوم",
+                "إخراج الهاتف من غرفة النوم",
+            ],
+            "التفكير المفرط قبل النوم": [
+                "تقنية الاسترخاء التدريجي للعضلات",
+                "«تقنية مستخدمة في الجيش الصيني، تعتمد على الاستلقاء على الظهر وشدّ العضلات ثم إرخائها لتهدئة الجسم.»",
+                "تقنية التخيل الموجه",
+                "«تخيّل مكان هادئ ومريح، يؤدي ذلك إلى تحويل التركيز من الأفكار المثيرة للقلق إلى أفكار هادئة، مما يساعد على تهدئة الجسم.»",
+                "كتابة  الأفكار قبل النوم لتفريغها من الدماغ إلى الورق",
+            ],
+            "السهر لإنهاء الواجبات المدرسية أو لقاء الأصدقاء": [
+                "تنظيم الوقت خلال اليوم",
+                "عمل جدول يومي للواجبات",
+                "تحديد وقت ثابت للنوم",
+                "تقليل النشاطات المسائية"
+            ],
+            "شرب الكافيين أو مشروبات الطاقة مساءً": [
+                "التوقف عن الكافيين قبل النوم بـ 6 ساعات",
+                "تجنب مشروبات الطاقة ليلاً"
+            ],
+            "ضوضاء / بيئة غير مناسبة": [
+                "استخدام سدادات أذن أو غطاء عين",
+                "تحسين جودة الفراش",
+                "تقليل الإضاءة"
+            ],
+            "قيلولة طويلة": [
+                "ضبط القيلولة بين 20-30 دقيقة",
+                "تجنب القيلولة بعد الرابعة عصراً"
+            ]
+        };
+
+       function getSleepRange(age) {
+    if (age < 0 || age > 120) return [0, 0];
+
+    if (age === 0) return [14, 17];
+    if (age >= 1 && age <= 2) return [11, 14];
+    if (age >= 3 && age <= 5) return [10, 13];
+    if (age >= 6 && age <= 13) return [9, 11];
+    if (age >= 14 && age <= 17) return [8, 10];
+    if (age >= 18 && age <= 25) return [7, 9];
+    if (age >= 26 && age <= 64) return [7, 9];
+    if (age >= 65) return [7, 8];
+}
+
+        function calculate() {
+    let result = document.getElementById("result");
+    let bar = document.getElementById("progressBar");
+    let options = document.getElementById("options");
+    let solution = document.getElementById("solution");
+
+    solution.style.display = "none";
+    solution.innerHTML = "";
+    options.style.display = "none";
+
+    let nameInput = document.getElementById("name").value.trim();
+    let ageInput = document.getElementById("age").value.trim();
+    let sleepInput = document.getElementById("sleep").value.trim();
+
+    if (!nameInput) {
+        result.innerHTML = "الرجاء إدخال اسمك.";
+        bar.style.width = "0%";
+        return;
+    }
+    if (ageInput === "") {
+        result.innerHTML = "الرجاء إدخال عمرك.";
+        bar.style.width = "0%";
+        return;
+    }
+    if (sleepInput === "") {
+        result.innerHTML = "الرجاء إدخال ساعات نومك يومياً.";
+        bar.style.width = "0%";
+        return;
+    }
+
+    let age = Number(ageInput);
+    let sleep = Number(sleepInput);
+
+    if (age < 0 || age > 120) {
+        result.innerHTML = "الرجاء إدخال عمر صحيح.";
+        bar.style.width = "0%";
+        return;
+    }
+    if (sleep < 0 || sleep > 24) {
+        result.innerHTML = "الرجاء إدخال ساعات نوم صحيحة";
+        bar.style.width = "0%";
+        return;
+    }
+
+    let [minSleep, maxSleep] = getSleepRange(age);
+    let basePercentage;
+
+    if (sleep >= minSleep && sleep <= maxSleep) {
+        basePercentage = 100;
+    } else if (sleep < minSleep) {
+        basePercentage = 100 - ((minSleep - sleep) / minSleep * 100);
+    } else {
+        basePercentage = 100 - ((sleep - maxSleep) / maxSleep * 100);
+    }
+
+    basePercentage = Math.max(0, Math.min(basePercentage, 100));
+
+    result.innerHTML = "نسبة النوم الطبيعي: " + basePercentage.toFixed(2) + "%";
+
+    bar.style.width = basePercentage + "%";
+    if (basePercentage > 75) bar.style.backgroundColor = "#4CAF50";
+    else if (basePercentage >= 50) bar.style.backgroundColor = "#FFC107";
+    else bar.style.backgroundColor = "#F44336";
+
+    let analysis = "";
+    if (basePercentage < 50)
+        analysis = "تشير النتائج إحصائيًا إلى نقص حاد في ساعات النوم🫨.";
+    else if (basePercentage < 75)
+        analysis = "تشير النتائج إحصائيًا إلى نوم أقل من المعدل الطبيعي😕."; 
+    else if (basePercentage < 100)
+        analysis = "تشير النتائج إحصائيًا إلى نوم جيد😀.";
+    else
+        analysis = "تشير النتائج إحصائيًا إلى نوم ممتاز , استمر😁."; 
+
+    result.innerHTML += `<br><span class="bold">${analysis}</span>`;
+
+    if (basePercentage < 100) options.style.display = "block";
+}
+
+
+
+        function showSolution() {
+            let name = document.getElementById("name").value;
+            let problem = document.getElementById("problemSelect").value;
+            let solutionDiv = document.getElementById("solution");
+
+            if (!problem) {
+                solutionDiv.style.display = "none";
+                solutionDiv.innerHTML = "";
+                return;
+            }
+
+            solutionDiv.style.display = "block";
+
+            let descriptions = {
+                "استخدام الهاتف / الكمبيوتر قبل النوم": "أنت على السرير , قررت ان تأخذ هاتفك وتتفقد مواقع التواصل الاجتماعي لمدة 10 دقائق , لتبدأ بمشاهدة مقاطع الفيديو القصيرة واحد تلو الآخر , وبعد فترة تجد ان ساعات قد مرت دون ان تشعر",
+                "التفكير المفرط قبل النوم": "تتحول فكرة بسيطة إلى سلسلة سيناريوهات مزعجة تمنع النوم.",
+                "السهر لإنهاء الواجبات المدرسية أو لقاء الأصدقاء": "هذا يقلل ساعات النوم ويفسد الساعة البيولوجية.",
+                "شرب الكافيين أو مشروبات الطاقة مساءً": "تسبب نشاطًا وهميًا وتعيق النوم.",
+                "ضوضاء / بيئة غير مناسبة": "تجعل النوم متقطعًا وضعيف الجودة.",
+                "قيلولة طويلة": "قيلولة طويلة تسبب خمولاً وتقلل النعاس ليلاً."
+            };
+
+            let solutionLines = problemSolutions[problem] || [];
+
+            let html = `<h3>أهلاً ${name}</h3>
+                        <p class="bold encourage">جميل أنك تحاول تحسين نومك. خطوة رائعة نحو صحة أفضل!👏🌱</p>
+                        <p class="section-title">وصف مشكلتك:</p>
+                        <p class="bold problem-desc">${descriptions[problem]}</p>
+                        <p class="section-title">الحلول المقترحة:</p>`;
+
+            solutionLines.forEach(line => {
+    html += `<p class="bold">${line}</p>`;
+});
+
+
+            solutionDiv.innerHTML = html;
+        }
+    </script>
+
+</body>
+    
+    <p style="font-size:14px; opacity:0.7; text-align:center; margin-top:20px;">
+        * تم اعتماد توصيات ساعات النوم وفق 
+        <a href="https://www.thensf.org/how-many-hours-of-sleep-do-you-really-need/" target="_blank">
+            مؤسسة National Sleep Foundation
+        </a>
+    </p>
+</html>
